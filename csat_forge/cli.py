@@ -40,6 +40,14 @@ def main(argv=None):
     k.add_argument("--json", action="store_true")
     k.add_argument("--no-answer", action="store_true")
 
+    w = sub.add_parser("worksheet", help="인쇄용 문제지(HTML, 정답지 포함) 생성")
+    w.add_argument("-n", type=int, default=10, help="기본 유형 문항 수")
+    w.add_argument("--killer", type=int, default=0, help="킬러 문항 수")
+    w.add_argument("--topics", help="쉼표로 구분한 생성기 이름. 생략 시 무작위")
+    w.add_argument("--seed", type=int)
+    w.add_argument("--title", default="수학 문제지")
+    w.add_argument("--out", default="worksheet.html")
+
     sub.add_parser("list", help="생성기 목록")
 
     d = sub.add_parser("diagnose", help="학생이 고른 보기로 실수 유형 진단")
@@ -59,6 +67,20 @@ def main(argv=None):
         return 0
     if a.seed is not None:
         random.seed(a.seed)
+    if a.cmd == "worksheet":
+        from csat_forge.worksheet import build_worksheet
+        topics = a.topics.split(",") if a.topics else None
+        recs = []
+        for i in range(a.n):
+            recs.append(generate(random.choice(topics) if topics else None))
+        for _ in range(a.killer):
+            r = generate_meta()
+            if r:
+                recs.append(r)
+        with open(a.out, "w", encoding="utf-8") as fh:
+            fh.write(build_worksheet(recs, a.title))
+        print(f"{len(recs)}문항 → {a.out}")
+        return 0
     for i in range(a.n):
         if a.cmd == "gen":
             rec = generate(a.topic, subjective=a.subjective)

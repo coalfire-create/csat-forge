@@ -41,6 +41,7 @@ LLMs write exam problems that *look* right and are wrong surprisingly often. csa
 - **Distractors with intent** – wrong choices are not random; each one comes from a named mistake (forgot the complement, mixed up conditional direction, ignored weights…).
 - **Diagnosis** – feed the choice a student picked, get the likely mistake and advice. Generate a same-type follow-up.
 - **Short-answer mode** – convert to CSAT 단답형 (integer 0–999).
+- **Worksheets** – one command makes a printable HTML problem set with a separate answer-and-solution page (great for tutors).
 - **Figures** – some generators emit SVG graphs (`pip install 'csat-forge[figures]'`).
 
 ## Usage
@@ -50,6 +51,7 @@ csat-forge list                                   # all 121 generators
 csat-forge gen --topic conditional_prob --seed 0  # one problem
 csat-forge gen -n 20 --subjective --json > set.jsonl
 csat-forge killer -n 5                            # killer problems
+csat-forge worksheet -n 15 --killer 3 --out sheet.html   # printable worksheet + answer key
 csat-forge diagnose --topic conditional_prob --seed 0 --chosen 4
 ```
 

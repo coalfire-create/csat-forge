@@ -1,0 +1,9 @@
+name: Request / propose a generator
+description: A topic you want covered
+labels: ["new generator"]
+body:
+  - type: textarea
+    id: topic
+    attributes:
+      label: Topic and an example problem
+    validations: {required: true}

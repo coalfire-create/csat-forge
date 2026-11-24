@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use csat-forge, please cite it."
+title: "csat-forge: verified parametric CSAT math problem generator"
+type: software
+license: MIT
+repository-code: "https://github.com/coalfire-create/csat-forge"
+url: "https://coalfire-create.github.io/csat-forge/"
+date-released: 2026-11-24
+authors:
+  - alias: coalfire-create

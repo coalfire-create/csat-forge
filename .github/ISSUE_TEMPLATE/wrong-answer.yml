@@ -1,0 +1,16 @@
+name: Wrong answer / ambiguous problem
+description: A generated problem has a wrong answer or unclear statement
+labels: ["bug"]
+body:
+  - type: input
+    id: repro
+    attributes:
+      label: Command (topic + seed)
+      placeholder: csat-forge gen --topic conditional_prob --seed 0
+    validations: {required: true}
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong?
+      description: Expected answer vs. printed answer, or which sentence is ambiguous.
+    validations: {required: true}

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "csat-forge"
-version = "0.1.0"
+version = "0.2.0"
 description = "Verified, parametric Korean CSAT (수능) math problem generator — answers are computed with SymPy, not guessed by an LLM."
 readme = "README.md"
 license = { text = "MIT" }
