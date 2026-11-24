@@ -1,5 +1,7 @@
 # csat-forge
 
+[![ci](https://github.com/coalfire-create/csat-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/coalfire-create/csat-forge/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Math problems whose answers are *computed*, not guessed.**
 A generator for Korean CSAT (수능) style math problems — including multi-condition "killer" problems — where every answer comes from SymPy, every wrong choice is tagged with the mistake that produces it, and every problem ships with a step-by-step solution.
 
