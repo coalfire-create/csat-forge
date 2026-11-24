@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "csat-forge"
+version = "0.1.0"
+description = "Verified, parametric Korean CSAT (수능) math problem generator — answers are computed with SymPy, not guessed by an LLM."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = ["sympy>=1.12"]
+keywords = ["math", "education", "sympy", "problem-generator", "csat", "suneung", "korea"]
+
+[project.optional-dependencies]
+figures = ["matplotlib", "numpy"]
+dev = ["pytest", "antlr4-python3-runtime==4.11.1"]
+
+[project.scripts]
+csat-forge = "csat_forge.cli:main"
+
+[tool.setuptools]
+packages = ["csat_forge"]
