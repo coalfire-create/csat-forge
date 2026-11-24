@@ -48,6 +48,20 @@ def main(argv=None):
     w.add_argument("--title", default="수학 문제지")
     w.add_argument("--out", default="worksheet.html")
 
+    e = sub.add_parser("eval", help="LLM 평가: 새 문제 + 오개념 끌림 지수")
+    e.add_argument("--backend", choices=["random", "openai", "anthropic", "mlx"], default="random")
+    e.add_argument("--model")
+    e.add_argument("--base-url", help="OpenAI 호환 엔드포인트 (vLLM, Ollama, LM Studio 등)")
+    e.add_argument("--key-env", help="API 키가 든 환경변수 이름")
+    e.add_argument("-n", type=int, default=100)
+    e.add_argument("--seed", type=int, help="생략 시 새 seed(출력됨)")
+    e.add_argument("--all", action="store_true", help="태그 없는 문제도 포함 (기본: 오개념 태그 문제만)")
+    e.add_argument("--cot", action="store_true", help="단계별 풀이 허용")
+    e.add_argument("--max-tokens", type=int)
+    e.add_argument("--yes", action="store_true", help="유료 API 호출 확인 생략")
+    e.add_argument("--json-out")
+    e.add_argument("--report-out")
+
     sub.add_parser("list", help="생성기 목록")
 
     d = sub.add_parser("diagnose", help="학생이 고른 보기로 실수 유형 진단")
@@ -67,6 +81,26 @@ def main(argv=None):
         return 0
     if a.seed is not None:
         random.seed(a.seed)
+    if a.cmd == "eval":
+        from csat_forge import evalkit as ek
+        if a.backend in ("openai", "anthropic") and not a.base_url and not a.yes:
+            print(f"유료 API로 {a.n}회 호출합니다. 진행하려면 --yes 를 붙이세요.", file=sys.stderr)
+            return 2
+        seed = a.seed if a.seed is not None else random.randrange(1 << 30)
+        be = ek.make_backend(a.backend, a.model, a.base_url, a.max_tokens, a.key_env)
+        items = ek.draw_items(a.n, seed, tagged_only=not a.all)
+        res = ek.run_eval(be, items, cot=a.cot,
+                          progress=lambda i, n: print(f"\r{i}/{n}", end="", file=sys.stderr))
+        print(file=sys.stderr)
+        an = ek.analyze(res)
+        rep = ek.render_report(a.model or a.backend, an, seed, a.cot)
+        print(rep)
+        if a.report_out:
+            open(a.report_out, "w", encoding="utf-8").write(rep + "\n")
+        if a.json_out:
+            json.dump({"seed": seed, "analysis": an, "results": res},
+                      open(a.json_out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        return 0
     if a.cmd == "worksheet":
         from csat_forge.worksheet import build_worksheet
         topics = a.topics.split(",") if a.topics else None
