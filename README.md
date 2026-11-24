@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/social-preview.png" alt="csat-forge" width="720"></p>
+
 # csat-forge
 
 [![ci](https://github.com/coalfire-create/csat-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/coalfire-create/csat-forge/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -6,6 +8,8 @@
 A generator for Korean CSAT (수능) style math problems — including multi-condition "killer" problems — where every answer comes from SymPy, every wrong choice is tagged with the mistake that produces it, and every problem ships with a step-by-step solution.
 
 **[▶ Live demo — runs entirely in your browser](https://coalfire-create.github.io/csat-forge/)** (Pyodide + SymPy, no server) · 한국어: [README.ko.md](README.ko.md)
+
+<p align="center"><a href="https://coalfire-create.github.io/csat-forge/"><img src="docs/assets/demo.png" alt="Live demo: pick a wrong choice and it tells you the mistake behind it" width="560"></a></p>
 
 ```bash
 pip install git+https://github.com/coalfire-create/csat-forge
