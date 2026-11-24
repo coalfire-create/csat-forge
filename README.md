@@ -3,7 +3,7 @@
 **Math problems whose answers are *computed*, not guessed.**
 A generator for Korean CSAT (수능) style math problems — including multi-condition "killer" problems — where every answer comes from SymPy, every wrong choice is tagged with the mistake that produces it, and every problem ships with a step-by-step solution.
 
-한국어: [README.ko.md](README.ko.md)
+**[▶ Live demo — runs entirely in your browser](https://coalfire-create.github.io/csat-forge/)** (Pyodide + SymPy, no server) · 한국어: [README.ko.md](README.ko.md)
 
 ```bash
 pip install git+https://github.com/coalfire-create/csat-forge

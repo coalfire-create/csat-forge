@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>csat-forge · live demo</title>
+<meta name="description" content="Math problems whose answers are computed, not guessed. Runs entirely in your browser (Pyodide + SymPy).">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+:root{--bg:#fbfaf7;--fg:#1c1b19;--mut:#6b675f;--card:#fff;--line:#e4e0d6;--acc:#1f5eff;--ok:#16794a;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--fg:#ecebe6;--mut:#9a968c;--card:#1d1d1b;--line:#33322e;--acc:#7aa2ff;--ok:#5ad19a;--bad:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 20px;font-size:14px}
+.sub a{color:var(--acc)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+select,input,button{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+input{width:90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px}
+.tag{font-size:12px;color:var(--mut);margin-bottom:10px}
+.q{white-space:pre-wrap}
+.ch{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.ch button{text-align:left;cursor:pointer}
+.ch button.right{border-color:var(--ok);color:var(--ok)}
+.ch button.wrong{border-color:var(--bad);color:var(--bad)}
+.diag{margin-top:10px;padding:10px 12px;border-left:3px solid var(--bad);background:color-mix(in srgb,var(--bad) 8%,transparent);border-radius:6px;font-size:14px}
+.diag.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 8%,transparent)}
+details{margin-top:12px}summary{cursor:pointer;color:var(--acc)}
+.expl{white-space:pre-wrap;margin-top:8px}
+.status{color:var(--mut);font-size:14px;margin:12px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>csat-forge</h1>
+<p class="sub">정답을 맞히는 게 아니라 <b>계산하는</b> 수능 수학 문제 생성기 · 전부 브라우저 안에서 실행됩니다 (Pyodide + SymPy) · <a href="https://github.com/coalfire-create/csat-forge">GitHub</a></p>
+<div class="bar">
+  <select id="mode"><option value="basic">기본 유형</option><option value="killer">킬러 (가)(나)(다) 합성</option></select>
+  <select id="topic"></select>
+  <input id="seed" type="number" placeholder="seed" title="같은 seed → 같은 문제">
+  <button id="go" class="primary" disabled>문제 생성</button>
+</div>
+<div id="status" class="status">엔진 로딩 중… (처음 한 번 10~20초, SymPy를 내려받아요)</div>
+<div id="out"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const FILES=["__init__","problem_engine","meta_killer_engine","diagnosis","numverify","plain_format"];
+let py, lists;
+const MATH=[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}];
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function render(el){renderMathInElement(el,{delimiters:MATH,throwOnError:false})}
+
+async function boot(){
+  py=await loadPyodide();
+  await py.loadPackage("sympy");
+  py.FS.mkdir("/csat_forge");
+  for(const f of FILES){
+    const r=await fetch(`csat_forge/${f}.py`); if(!r.ok) throw new Error("fetch "+f);
+    py.FS.writeFile(`/csat_forge/${f}.py`,await r.text());
+  }
+  py.runPython(`
+import sys, json, random
+sys.path.insert(0, "/")
+from csat_forge import GENERATORS, generate, generate_meta
+from csat_forge import meta_killer_engine as _m
+from csat_forge.diagnosis import diagnose
+_last = {}
+def lists():
+    return json.dumps({"basic": list(GENERATORS), "killer": list(_m._DOMAINS)})
+def make(mode, topic, seed):
+    random.seed(seed)
+    rec = generate(topic or None) if mode == "basic" else generate_meta(domain=topic or None)
+    _last["rec"] = rec
+    out = {k: v for k, v in rec.items() if k != "_meta"}
+    return json.dumps(out, default=str, ensure_ascii=False)
+def diag(i):
+    return json.dumps(diagnose(_last["rec"], int(i)), default=str, ensure_ascii=False)
+`);
+  lists=JSON.parse(py.globals.get("lists")());
+  fillTopics();
+  $("go").disabled=false;
+  $("status").textContent="준비 완료. 같은 seed를 쓰면 같은 문제가 나와요.";
+  go();
+}
+function fillTopics(){
+  const m=$("mode").value, t=$("topic");
+  t.innerHTML='<option value="">무작위</option>'+lists[m].map(x=>`<option>${x}</option>`).join("");
+}
+function go(){
+  $("go").disabled=true;
+  setTimeout(()=>{
+    try{
+      const seedV=$("seed").value; const seed=seedV===""?Math.floor(Math.random()*1e6):parseInt(seedV);
+      let rec=null;
+      for(let k=0;k<5&&!rec;k++){
+        const s=JSON.parse(py.globals.get("make")($("mode").value,$("topic").value,seed+k));
+        if(s&&s.completion) rec=s;
+      }
+      if(!rec) throw new Error("생성 실패");
+      show(rec,seed);
+    }catch(e){$("out").innerHTML=`<div class="card">오류: ${esc(String(e))}</div>`}
+    $("go").disabled=false;
+  },30);
+}
+function show(rec,seed){
+  const c=rec.completion, s=rec.spec||{};
+  const ans=String(c.answer), right=parseInt(ans);
+  let h=`<div class="card"><div class="tag">${esc(s.topic||"")} · ${s.score||""}점 · ${esc(s.difficulty||"")} · seed ${seed}</div>`;
+  h+=`<div class="q">${esc(c.question)}</div>`;
+  if(c.choices){
+    h+='<div class="ch">'+c.choices.map((x,i)=>`<button data-i="${i+1}">${"①②③④⑤"[i]} ${esc(x)}</button>`).join("")+'</div><div id="diag"></div>';
+  }
+  h+=`<details><summary>정답과 풀이 보기</summary><div class="expl">${esc(ans)}\n\n${esc(c.explanation||"")}</div></details></div>`;
+  $("out").innerHTML=h;
+  render($("out"));
+  document.querySelectorAll(".ch button").forEach(b=>b.onclick=()=>{
+    const i=parseInt(b.dataset.i);
+    document.querySelectorAll(".ch button").forEach(x=>x.disabled=true);
+    document.querySelector(`.ch button[data-i="${right}"]`).classList.add("right");
+    const d=$("diag");
+    if(i===right){d.innerHTML='<div class="diag ok">정답이에요.</div>';return}
+    b.classList.add("wrong");
+    try{
+      const r=JSON.parse(py.globals.get("diag")(i));
+      d.innerHTML=r.mistake?`<div class="diag"><b>이 오답의 의도:</b> ${esc(r.mistake)}<br>${esc(r.advice||"")}</div>`:'<div class="diag">오답이에요. (이 보기에는 실수 유형 태그가 없어요)</div>';
+      render(d);
+    }catch(e){d.innerHTML='<div class="diag">진단 실패</div>'}
+  });
+}
+$("mode").onchange=fillTopics; $("go").onclick=go;
+boot().catch(e=>{$("status").textContent="로딩 실패: "+e});
+</script>
+</body>
+</html>

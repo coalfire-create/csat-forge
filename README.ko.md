@@ -3,6 +3,8 @@
 **정답을 "맞히는" 게 아니라 "계산하는" 수능 수학 문제 생성기.**
 SymPy로 정답을 구성·계산하고, 오답 보기마다 '어떤 실수에서 나온 값인지' 태그를 달고, 단계별 풀이까지 자동으로 만들어요. (가)(나)(다) 조건 합성형 킬러 문제도 무한 생성돼요.
 
+**[▶ 라이브 데모 (브라우저에서 바로 실행)](https://coalfire-create.github.io/csat-forge/)**
+
 ```bash
 pip install git+https://github.com/coalfire-create/csat-forge
 csat-forge killer --domain cubic --seed 11
